@@ -2,6 +2,8 @@ from autogen_agentchat import AssistantAgent
 from autogen_ext.models.openai import  OpenAIChatCompletionClient
 import os
 import arxiv
+import asyncio
+from autogen_agentchat.teams import RoundRobinGroupChat
 from typing import List,Dict,AsyncGenerator
 
 openai_brain = OpenAIChatCompletionClient(model = 'gpt4o', api_key=os.getenv('OPEN_API_KEY'))
@@ -59,3 +61,21 @@ summarizer_agent = AssistantAgent(
         "3. Close with a single sentence takeaway. "
     ),
 )
+
+team = RoundRobinGroupChat(
+    participants=[arxiv_researcher_agent,summarizer_agent],
+    max_turns=2
+)
+
+async def run_team():
+
+    task = 'Conduct a literature review on the topic - Autogen and return exactly 5 papers.'
+
+
+    async for msg in team.run_stream(task=task):
+        print(msg)
+
+
+
+if (__name__=='__main__'):
+    asyncio.run(run_team())
